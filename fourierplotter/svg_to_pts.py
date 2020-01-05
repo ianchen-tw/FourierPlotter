@@ -5,10 +5,23 @@ from svg.path import parse_path
 import numpy as np
 from xml.dom import minidom
 
+def to_string(seg):
+    if type(seg) == Path:
+        return f'Path( length:{seg.length():.2f}, #segs:{len(seg._segments)})'
+    if type(seg) == Line:
+        return  f'Line(start={seg.start:.2f}, end={seg.end:.2f})'
+    elif type(seg) == CubicBezier:
+        return f"CubicBezier(start={seg.start:.2f}, control1={seg.control1:.2f}, control2={seg.control2:.2f}, end={seg.end:.2f})"
+    elif type(seg) == QuadraticBezier:
+        return f"QuadraticBezier(start={seg.start:.2f}, control={seg.control:.2f}, end={seg.end:.2f})"
+    elif type(seg) == Arc:
+        return f"Arc(start={seg.start:.2f}, radius={seg.radius:.2f}, rotation={seg.rotation:.2f}, arc={seg.arc:.2f}, sweep={seg.sweep:.2f}, end={seg.end:.2f})"
+    return f'unknown seg type:{type(seg)}, detail:{seg}'
+
 class SVG_Reader():
     def __init__(self, filename):
         self.config = {
-            'total_pts': 2000,
+            'total_pts': 5000,
             'filename': filename
         }
         self.read_file()
@@ -29,14 +42,20 @@ class SVG_Reader():
         pts_distrb = [ total_pts*p.length()/total_len for p in self.paths]
 
         pts = []
-        cur_pt_idx, target_pt_idx = 0, 0
+        cur_pt_idx = 0
         step = 1 / total_pts
+
         for p_idx, p in enumerate(self.paths):
-            target_pt_idx = cur_pt_idx + pts_distrb[p_idx]
-            while cur_pt_idx < target_pt_idx:
+            print(f'{to_string(p)}')
+            cur_path_pts = pts_distrb[p_idx]
+            step = abs(1 / cur_path_pts)
+            # target_pt_idx = cur_pt_idx + pts_distrb[p_idx]
+            input_x = 0
+            cur_pt_idx =0
+            while True:
                 input_x = step * cur_pt_idx
-                if input_x >= 1:
-                    input_x = 1
+                if input_x > 1:
+                    break
                 val = p.point(input_x)
                 interpolated_val = complex(val.real, -val.imag)
                 res = {
@@ -60,10 +79,17 @@ class SVG_Reader():
     def get_pts(self):
         pass
 
+from .fourier_solver import DiscreteComplexRelation, complex_fourier_analysis
 
 def main():
     reader = SVG_Reader('./gears.svg')
     pts = reader.interpolate()
+    pts_in = []
     for p in pts:
-        print(p)
+        r = DiscreteComplexRelation(p['input_x'], p['val'])
+        pts_in.append(r)
+    ret = complex_fourier_analysis(pts_in,2)
+    print(f'result: {ret}')
+    # for p in pts:
+    #     print(p)
     reader.show_points()

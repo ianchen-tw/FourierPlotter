@@ -11,6 +11,8 @@ numpy = "*"
 matplotlib = "*"
 svg-path = "*"
 tqdm = "*"
+click = "*"
+setuptools = "*"
 
 [requires]
 python_version = "3.7"
