@@ -3,9 +3,6 @@ import pathlib
 import errno
 import os
 
-from fourierplotter.plotter import main as plt_main
-from fourierplotter.svg_to_pts import main as svg_main
-
 from .svg_to_pts import SVG_Reader
 from .plotter import Plotter
 from .fourier_solver import DiscreteComplexRelation, complex_fourier_analysis
@@ -16,15 +13,19 @@ from .fourier_solver import DiscreteComplexRelation, complex_fourier_analysis
 @click.option('--dpi', type=int, default=100, help="dpi for output image")
 @click.option('--verbose', type=bool, default=True, help='show progress bar')
 @click.option('--preview', is_flag=True, default=False, help='compute and preview outcome in real time')
-def fourier_plotter(dpi, output, input_file, verbose, preview):
-    print(f'dpi = {dpi}')
-    print(f'output = {output}')
-    print(f'input = {input_file}')
-    print(f'verbose = {verbose}')
-    print(f'preview = {preview}')
+@click.option('--num_terms', type=int, default=500, help="number of terms to approximate your image", show_default=True)
+@click.option('--duration', type=float, default=10, help="video length (in second)", show_default=True)
+def fourier_plotter(dpi, output, input_file, verbose, preview, num_terms, duration):
+    if verbose:
+        print(f'dpi = {dpi}')
+        print(f'output = {output}')
+        print(f'input = {input_file}')
+        print(f'verbose = {verbose}')
+        print(f'preview = {preview}')
+        print(f'num_terms = {num_terms}')
+        print(f'duration = {duration:.2f} sec')
 
     # read in svg file
-    # input_file = 'office.svg'
     if not pathlib.Path(input_file).exists():
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), input_file)
     svg_reader = SVG_Reader(input_file)
@@ -40,15 +41,15 @@ def fourier_plotter(dpi, output, input_file, verbose, preview):
         r = DiscreteComplexRelation(p['input_x'], p['val'])
         pts_in.append(r)
 
+    num_terms = num_terms//2
+    num_terms = num_terms if num_terms >=1 else 1
     # dictionary of solved terms
-    ret = complex_fourier_analysis(pts_in, 1000)
-
-    # from pprint import pprint
-    # pprint(ret)
+    ret = complex_fourier_analysis(pts_in, num_terms)
 
     # plot data to file
     plotter = Plotter(verbose=True)
-    plotter.set_config( output_filename=output, total_frames=2000)
+    total_frames = int(duration*1000/plotter.config['draw_interval'] )
+    plotter.set_config( output_filename=output, total_frames=total_frames, dpi=dpi)
     plotter.read_data(ret)
     plotter.draw(live=preview)
 

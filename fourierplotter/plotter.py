@@ -40,21 +40,19 @@ class Plotter:
     def __init__(self, verbose=True):
         self.config = {
             'verbose': verbose,
+            'dpi':100,
             'input_data': None,
             'output_filename': 'fourier_plot.mp4',
             'input_filename': 'something.svg',
-            'total_frames': 1000
+            'total_frames': 1000,
+            'draw_interval':17,
         }
 
-        # if self.config['verbose']==True:
-        #     self.pbar = tqdm(total=self.config['total_frames'])
-
-        # self.read_data()
         # figure
         self.plt = plt
         self.fig = plt.figure()
-        self.fig.set_dpi(100)
-        self.fig.set_size_inches(7, 6.5)
+        self.fig.set_dpi(self.config['dpi'])
+        self.fig.set_size_inches(9, 9)
 
 
         # gears
@@ -85,8 +83,9 @@ class Plotter:
             ])
         for k,v in kwargs.items():
             if k in configable_options:
-                # print(f'config k={k}, v={v}')
                 self.config[k] = v
+                if k == 'dpi':
+                    self.fig.set_dpi(v)
 
     def read_data(self, d:Dict):
         self.config['input_data'] = d
@@ -106,9 +105,8 @@ class Plotter:
         return self.plot_data.values()
 
     def animate(self, frame):
-        rad = frame / self.config['total_frames']
-        # rad = frame*0.002
-        # self.raw_data
+        # normalized angle: from 0 to 1
+        angle = frame / self.config['total_frames']
 
         for i in range(len(self.raw_data['line_pts'])):
             # a complex number
@@ -121,13 +119,12 @@ class Plotter:
             # print(f'x:{x}, y:{y}')
 
             next_pos = complex(x, y) + coffi * \
-                cmath.exp(term * 2 * math.pi * 1j * rad)
+                cmath.exp(term * 2 * math.pi * 1j * angle)
             self.raw_data['line_pts'][i] = next_pos.real, next_pos.imag
 
         # the index of data store the edge point
         edge_point_idx = len(self.raw_data['line_pts'])-1
 
-        # print(f'frame={frame}, idx={edge_point_idx}')
         self.raw_data['trace_line_pts'][frame] = self.raw_data['line_pts'][edge_point_idx]
         # print(f"edge :{self.raw_data['line_pts'][idx]}")
         self.plot_data['line'].set_data(self.raw_data['line_pts']['x'], self.raw_data['line_pts']['y'])
@@ -143,9 +140,8 @@ class Plotter:
         self.animation = animation.FuncAnimation(self.fig, self.animate,
                                             init_func=self.animate_init,
                                             frames=self.config['total_frames'],
-                                            interval=20,
+                                            interval=self.config['draw_interval'],
                                             blit=True)
-        # self.live_show()
         if live:
             self.live_show()
         else:

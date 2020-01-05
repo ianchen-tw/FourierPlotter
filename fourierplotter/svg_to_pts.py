@@ -46,10 +46,11 @@ class SVG_Reader():
         step = 1 / total_pts
 
         for p_idx, p in enumerate(self.paths):
-            print(f'{to_string(p)}')
+            # show path information
+            # print(f'{to_string(p)}')
+
             cur_path_pts = pts_distrb[p_idx]
             step = abs(1 / cur_path_pts)
-            # target_pt_idx = cur_pt_idx + pts_distrb[p_idx]
             input_x = 0
             cur_pt_idx =0
             while True:
@@ -78,18 +79,3 @@ class SVG_Reader():
 
     def get_pts(self):
         pass
-
-from .fourier_solver import DiscreteComplexRelation, complex_fourier_analysis
-
-def main():
-    reader = SVG_Reader('./gears.svg')
-    pts = reader.interpolate()
-    pts_in = []
-    for p in pts:
-        r = DiscreteComplexRelation(p['input_x'], p['val'])
-        pts_in.append(r)
-    ret = complex_fourier_analysis(pts_in,2)
-    print(f'result: {ret}')
-    # for p in pts:
-    #     print(p)
-    reader.show_points()
