@@ -1,3 +1,5 @@
+![pypi badge](https://img.shields.io/pypi/v/fourierplotter)
+
 # FourierPlotter
 
 Use complex Fourier Analysis to draw svg images
