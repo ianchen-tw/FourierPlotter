@@ -52,8 +52,7 @@ class Plotter:
         self.plt = plt
         self.fig = plt.figure()
         self.fig.set_dpi(self.config['dpi'])
-        self.fig.set_size_inches(9, 9)
-
+        self.fig.set_size_inches(5, 5)
 
         # gears
         # self.ax = plt.axes(xlim=(1500000, 3000000),  ylim=(-3500000,0))
@@ -65,13 +64,17 @@ class Plotter:
         # self.ax = plt.axes(xlim=(0, 2500000),  ylim=(-3000000,1000000))
 
         # office
-        self.ax = plt.axes(xlim=(0, 300000),  ylim=(-300000,0))
+        # self.ax = plt.axes(xlim=(0, 300000),  ylim=(-300000,0))
 
+        # normalize
+        self.ax = plt.axes(xlim=(-0.2,1.2),  ylim=(-0.2,1.2))
+        self.ax.get_yaxis().set_visible(False)
+        self.ax.get_xaxis().set_visible(False)
         # raw data serve as a numpy source datatsture for plot_data to use
         self.raw_data = None
 
-        line, = self.ax.plot([], [], 'o-', lw=3)
-        trace_line, = self.ax.plot([], [], 'o-', lw=3)
+        line, = self.ax.plot([], [], '.-', lw=1.6)
+        trace_line, = self.ax.plot([], [], '.-', lw=1.6)
         self.plot_data = {
             'line': line,
             'trace_line': trace_line,
@@ -79,7 +82,7 @@ class Plotter:
 
     def set_config(self,  **kwargs ):
         configable_options = set([
-            'verbose','output_filename','total_frames'
+            'verbose','output_filename','total_frames','dpi'
             ])
         for k,v in kwargs.items():
             if k in configable_options:
@@ -126,7 +129,7 @@ class Plotter:
         edge_point_idx = len(self.raw_data['line_pts'])-1
 
         self.raw_data['trace_line_pts'][frame] = self.raw_data['line_pts'][edge_point_idx]
-        # print(f"edge :{self.raw_data['line_pts'][idx]}")
+        # print(f"edge :{self.raw_data['line_pts'][edge_point_idx]}")
         self.plot_data['line'].set_data(self.raw_data['line_pts']['x'], self.raw_data['line_pts']['y'])
         self.plot_data['trace_line'].set_data(self.raw_data['trace_line_pts']['x'][:frame], self.raw_data['trace_line_pts']['y'][:frame])
 

@@ -21,6 +21,7 @@ def to_string(seg):
 class SVG_Reader():
     def __init__(self, filename):
         self.config = {
+            # TODO: export total_pts as an option
             'total_pts': 5000,
             'filename': filename
         }
@@ -44,7 +45,6 @@ class SVG_Reader():
         pts = []
         cur_pt_idx = 0
         step = 1 / total_pts
-
         for p_idx, p in enumerate(self.paths):
             # show path information
             # print(f'{to_string(p)}')
@@ -66,6 +66,22 @@ class SVG_Reader():
                 }
                 pts.append(res)
                 cur_pt_idx += 1
+
+        # normalize
+        minx = min( [ p['val'].real for p in pts])
+        maxx = max( [ p['val'].real for p in pts])
+        miny = min( [ p['val'].imag for p in pts])
+        maxy = max( [ p['val'].imag for p in pts])
+        # print(f'min:({minx},{miny}), max:({maxx},{maxy})')
+
+        scale_x = 1.0/(maxx-minx)
+        shift_x = -minx
+        scale_y = 1.0/(maxy-miny)
+        shift_y = -miny
+        for p in pts:
+            new_x = scale_x*(shift_x+p['val'].real)
+            new_y = scale_y*(shift_y+p['val'].imag)
+            p['val'] = complex( new_x, new_y)
         self.pts = pts
         return pts
 
@@ -79,3 +95,10 @@ class SVG_Reader():
 
     def get_pts(self):
         pass
+
+if __name__ == "__main__":
+    reader = SVG_Reader('./sample_input/shirt.svg')
+    pts = reader.interpolate()
+    for p in pts[:100]:
+        print(p)
+    print(f'len :{len(pts)}')
